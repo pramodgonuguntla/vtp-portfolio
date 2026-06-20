@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="VTP Portfolio"/>
+<title>VTP Portfolio</title>
+<style>
+  :root {
+    --bg:        #0a0f1e;
+    --surface:   #111827;
+    --surface2:  #1a2236;
+    --border:    #1e2d45;
+    --accent:    #3b82f6;
+    --accent2:   #10b981;
+    --warn:      #f59e0b;
+    --danger:    #ef4444;
+    --text:      #f1f5f9;
+    --muted:     #64748b;
+    --s1:        #3b82f6;
+    --s2:        #a855f7;
+    --s0:        #f59e0b;
+    --h0:        #64748b;
+    --positive:  #10b981;
+    --negative:  #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 14px; }
+
+  /* ── Layout ── */
+  #app { display: flex; flex-direction: column; height: 100dvh; }
+  #header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  #header .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  #refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  #refresh-btn:active { opacity: 0.7; }
+
+  #tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: color 0.15s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  #content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .big-number { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .big-label  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .mini-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .mini-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .mini-value { font-size: 16px; font-weight: 700; }
+
+  /* ── Strategy pills ── */
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .pill-s1 { background: rgba(59,130,246,0.15); color: var(--s1); }
+  .pill-s2 { background: rgba(168,85,247,0.15); color: var(--s2); }
+  .pill-s0 { background: rgba(245,158,11,0.15); color: var(--s0); }
+  .pill-h0 { background: rgba(100,116,139,0.15); color: var(--h0); }
+
+  /* ── Strategy PAT cards ── */
+  .strat-card { border-radius: 10px; padding: 14px; margin-bottom: 8px; }
+  .strat-card.s1 { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); }
+  .strat-card.s2 { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); }
+  .strat-card.s0 { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+  .strat-card .row { display: flex; justify-content: space-between; align-items: center; }
+  .strat-card .pat { font-size: 20px; font-weight: 700; }
+  .strat-card .details { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .strat-card .d-item { }
+  .strat-card .d-label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+  .strat-card .d-val { font-size: 12px; font-weight: 600; margin-top: 1px; }
+
+  /* ── Table ── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { text-align: left; color: var(--muted); font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 8px; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Progress bar ── */
+  .prog-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .prog-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
+  .prog-fill.s2 { background: var(--s2); }
+
+  /* ── Fund balance ── */
+  .balance-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .balance-row:last-child { border-bottom: none; }
+  .balance-label { font-size: 12px; color: var(--muted); }
+  .balance-value { font-size: 13px; font-weight: 600; }
+
+  /* ── Positive / Negative ── */
+  .pos { color: var(--positive); }
+  .neg { color: var(--negative); }
+  .neu { color: var(--text); }
+
+  /* ── Loading / Error ── */
+  #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; color: var(--muted); }
+  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 16px; text-align: center; color: #fca5a5; font-size: 13px; line-height: 1.5; }
+
+  /* ── Section header ── */
+  .sec-head { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .sec-head .badge { font-size: 10px; background: var(--surface2); padding: 2px 7px; border-radius: 10px; color: var(--muted); font-weight: 500; }
+
+  /* ── Today trades ── */
+  .trade-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .trade-row:last-child { border-bottom: none; }
+  .trade-side { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; }
+  .buy  { background: rgba(16,185,129,0.15); color: var(--positive); }
+  .sell { background: rgba(239,68,68,0.15);  color: var(--negative); }
+  .trade-sym  { font-size: 13px; font-weight: 700; flex: 1; }
+  .trade-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .trade-val  { text-align: right; }
+  .trade-pat  { font-size: 12px; font-weight: 600; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* ── Config overlay ── */
+  #config { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: flex-end; }
+  #config.open { display: flex; }
+  #config-box { background: var(--surface); border-radius: 16px 16px 0 0; padding: 20px; width: 100%; }
+  #config-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  #config-box p  { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  #sid-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px; margin-bottom: 10px; outline: none; }
+  #sid-input:focus { border-color: var(--accent); }
+  #save-sid { width: 100%; background: var(--accent); border: none; border-radius: 8px; padding: 12px; color: white; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div>
+      <h1>VTP Portfolio</h1>
+      <div class="sub" id="last-updated">Loading…</div>
+    </div>
+    <button id="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+  <div id="tabs">
+    <div class="tab active" onclick="showTab('dashboard')">Dashboard</div>
+    <div class="tab" onclick="showTab('strategy')">Strategy</div>
+    <div class="tab" onclick="showTab('open')">Open Positions</div>
+    <div class="tab" onclick="showTab('progress')">Progress S1</div>
+    <div class="tab" onclick="showTab('trades')">Today's Trades</div>
+    <div class="tab" onclick="showTab('closed')">Closed Trades</div>
+  </div>
+  <div id="content">
+    <div id="loading"><div class="spinner"></div><span>Loading portfolio…</span></div>
+  </div>
+</div>
+
+<!-- Config overlay -->
+<div id="config">
+  <div id="config-box">
+    <h3>Connect Portfolio Sheet</h3>
+    <p>Paste your Google Sheets ID below. Make the sheet public (Share → Anyone with link → Viewer) to allow the app to read it.</p>
+    <input id="sid-input" placeholder="Spreadsheet ID (from URL)" />
+    <button id="save-sid" onclick="saveSheetId()">Connect & Load</button>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const DEFAULT_SHEET_ID = '19dPuW_q93k-1XAkXKl-_k6ap0NT764OZAdCvgfsyO6A';
+let SHEET_ID = localStorage.getItem('vtp_sheet_id') || DEFAULT_SHEET_ID;
+
+// ── State ────────────────────────────────────────────────────────────────────
+let state = { open: [], closed: [], summary: [], fundBlock: {}, progress1: [], progress2: [], trades: [], loaded: false };
+let currentTab = 'dashboard';
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const fmt = n => {
+  if (n === null || n === undefined || n === '') return '—';
+  const num = parseFloat(n);
+  if (isNaN(num)) return n;
+  return (num >= 0 ? '' : '-') + '₹' + Math.abs(num).toLocaleString('en-IN', {maximumFractionDigits: 0});
+};
+const fmtN = n => {
+  const num = parseFloat(n);
+  if (isNaN(num)) return '—';
+  return (num >= 0 ? '+' : '') + '₹' + num.toLocaleString('en-IN', {maximumFractionDigits: 0});
+};
+const cls = n => parseFloat(n) >= 0 ? 'pos' : 'neg';
+const pill = s => `<span class="pill pill-${(s||'').toLowerCase()}">${s||'—'}</span>`;
+
+// ── Sheets API ───────────────────────────────────────────────────────────────
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${sheetName}: HTTP ${res.status}`);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?$/, ''));
+  if (!json.table || !json.table.rows) return [];
+  const cols = json.table.cols.map(c => c.label);
+  return json.table.rows.map(r => {
+    const obj = {};
+    cols.forEach((c, i) => { obj[c] = r.c[i] ? (r.c[i].v !== null ? r.c[i].v : r.c[i].f) : null; });
+    return obj;
+  });
+}
+
+// ── Parse Yearly Summary ─────────────────────────────────────────────────────
+function parseSummary(rows) {
+  const summary = [];
+  const fund = { byStrategy: {} };
+
+  for (const row of rows) {
+    const fy  = row['FY'] || row[Object.keys(row)[0]];
+    const str = row['Strategy'] || row[Object.keys(row)[1]];
+    const pat = parseFloat(row['PAT'] || row[Object.keys(row)[11]]) || 0;
+    const pbt = parseFloat(row['PBT'] || row[Object.keys(row)[10]]) || 0;
+    const tax = parseFloat(row['Tax'] || row[Object.keys(row)[11-1]]) || 0;
+    const lots = parseFloat(row['Lots'] || row[Object.keys(row)[2]]) || 0;
+    const bv  = parseFloat(row['Buy Value'] || row[Object.keys(row)[3]]) || 0;
+    const sv  = parseFloat(row['Sell Value'] || row[Object.keys(row)[5]]) || 0;
+    const ebit= parseFloat(row['EBIT'] || row[Object.keys(row)[7]]) || 0;
+
+    if (fy && str && fy.toString().startsWith('FY')) {
+      summary.push({ fy, strategy: str, lots, buyValue: bv, sellValue: sv, ebit, pbt, tax, pat });
+    }
+
+    // Fund block rows (label in col A, values in cols B–F)
+    const label = String(fy || '').trim();
+    if (['S1 PAT','S2 PAT','S0 PAT','H0 PAT','Funds Input','Currently Invested','Tax Pending','Ideal Fund Balance','Actual Balance','Actual Fund Balance'].some(k => label.includes(k))) {
+      fund.byStrategy[label] = parseFloat(str) || 0;
+    }
+    if (label === 'Funds Input' || label.includes('Funds Input')) fund.fundsInput = parseFloat(str) || 0;
+    if (label.includes('Ideal')) fund.ideal = parseFloat(str) || 0;
+    if (label.includes('Actual')) fund.actual = parseFloat(str) || 0;
+    if (label.includes('Currently Invested')) fund.invested = parseFloat(str) || 0;
+    if (label.includes('Tax Pending')) fund.taxPending = parseFloat(str) || 0;
+  }
+  return { summary, fund };
+}
+
+// ── Load all data ────────────────────────────────────────────────────────────
+async function loadData() {
+  setContent('<div id="loading"><div class="spinner"></div><span>Loading portfolio…</span></div>');
+  document.getElementById('last-updated').textContent = 'Refreshing…';
+
+  try {
+    const [openRows, closedRows, summaryRows, prog1Rows, todayRows] = await Promise.all([
+      fetchSheet('ZE7496'),
+      fetchSheet('Closed Trades'),
+      fetchSheet('Yearly Summary'),
+      fetchSheet('Progress_S1'),
+      fetchSheet("Today's Trades").catch(() => []),
+    ]);
+
+    // Open positions
+    state.open = openRows.filter(r => {
+      const ref = r['Ref'] || r[Object.keys(r)[0]];
+      return ref && !String(ref).includes('━') && String(ref).trim() !== '' && String(ref) !== 'Ref';
+    }).map(r => ({
+      ref:      r['Ref'],
+      date:     r['Buy Date'],
+      scrip:    r['Scrip'],
+      qty:      parseFloat(r['Qty']) || 0,
+      price:    parseFloat(r['Price']) || 0,
+      value:    parseFloat(r['Value']) || 0,
+      charge:   parseFloat(r['Charge']) || 0,
+      strategy: r['Strategy'] || 'S1',
+    }));
+
+    // Closed trades
+    state.closed = closedRows.filter(r => {
+      const ref = r['Ref'] || r[Object.keys(r)[0]];
+      return ref && !String(ref).includes('━') && String(ref) !== 'Ref' && r['Scrip'];
+    }).map(r => ({
+      ref:       r['Ref'],
+      scrip:     r['Scrip'],
+      buyDate:   r['Buy Date'],
+      sellDate:  r['Sell Date'],
+      qty:       parseFloat(r['Qty']) || 0,
+      buyPrice:  parseFloat(r['Price']) || 0,
+      sellPrice: parseFloat(r[Object.keys(r)[9]]) || 0,
+      ebit:      parseFloat(r['EBIT']) || 0,
+      pat:       parseFloat(r['PAT']) || 0,
+      tax:       parseFloat(r['Tax']) || 0,
+      strategy:  r['Strategy'] || '',
+      fy:        r['FY'] || '',
+    }));
+
+    const { summary, fund } = parseSummary(summaryRows);
+    state.summary  = summary;
+    state.fundBlock = fund;
+
+    // Progress S1
+    state.progress1 = prog1Rows.filter(r => {
+      const n = r[Object.keys(r)[0]];
+      return n && !isNaN(parseFloat(n));
+    });
+
+    // Today's trades
+    state.trades = (todayRows || []).filter(r => r['Symbol'] && r['Symbol'] !== 'Symbol' && r['Symbol'] !== 'No trades today');
+
+    state.loaded = true;
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    renderTab(currentTab);
+
+  } catch (e) {
+    setContent(`<div class="error-box">Failed to load data.<br><br>${e.message}<br><br>Make sure the sheet is public (Share → Anyone with link → Viewer) and the Sheet ID is correct.<br><br><button onclick="document.getElementById('config').classList.add('open')" style="margin-top:10px;padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:white;font-size:13px;cursor:pointer;">Change Sheet ID</button></div>`);
+    document.getElementById('last-updated').textContent = 'Failed to load';
+  }
+}
+
+// ── Tab routing ──────────────────────────────────────────────────────────────
+function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabs = ['dashboard','strategy','open','progress','trades','closed'];
+  document.querySelectorAll('.tab')[tabs.indexOf(tab)].classList.add('active');
+  if (state.loaded) renderTab(tab);
+}
+
+function renderTab(tab) {
+  if (tab === 'dashboard') renderDashboard();
+  else if (tab === 'strategy') renderStrategy();
+  else if (tab === 'open') renderOpen();
+  else if (tab === 'progress') renderProgress();
+  else if (tab === 'trades') renderTrades();
+  else if (tab === 'closed') renderClosed();
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const totalPAT = state.summary.reduce((a, r) => a + r.pat, 0);
+  const currentFY = 'FY2026-27';
+  const fyRows = state.summary.filter(r => r.fy === currentFY);
+  const fyPAT  = fyRows.reduce((a, r) => a + r.pat, 0);
+  const fyLots = fyRows.reduce((a, r) => a + r.lots, 0);
+
+  // By strategy totals
+  const byStrat = {};
+  for (const r of state.summary) {
+    if (!byStrat[r.strategy]) byStrat[r.strategy] = 0;
+    byStrat[r.strategy] += r.pat;
+  }
+
+  // Open positions
+  const totalOpen  = state.open.reduce((a, r) => a + r.value + r.charge, 0);
+  const openByStrat = {};
+  for (const r of state.open) {
+    if (!openByStrat[r.strategy]) openByStrat[r.strategy] = { count: 0, value: 0 };
+    openByStrat[r.strategy].count++;
+    openByStrat[r.strategy].value += r.value;
+  }
+
+  const ideal  = state.fundBlock.ideal  || 0;
+  const actual = state.fundBlock.actual || 0;
+  const gap    = ideal - actual;
+
+  setContent(`
+    <div class="card">
+      <div class="card-title">Total PAT — All Time</div>
+      <div class="big-number ${cls(totalPAT)}">${fmt(totalPAT)}</div>
+      <div class="big-label">${state.summary.reduce((a,r)=>a+r.lots,0)} closed lots across ${[...new Set(state.summary.map(r=>r.fy))].length} FYs</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="mini-card">
+        <div class="mini-label">Current FY PAT (${currentFY})</div>
+        <div class="mini-value ${cls(fyPAT)}">${fmt(fyPAT)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${fyLots} lots closed</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label">Open Positions</div>
+        <div class="mini-value">${state.open.length}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${fmt(totalOpen)} deployed</div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="mini-card">
+        <div class="mini-label" style="color:var(--s1)">S1 PAT</div>
+        <div class="mini-value ${cls(byStrat.S1||0)}">${fmt(byStrat.S1||0)}</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label" style="color:var(--s2)">S2 PAT</div>
+        <div class="mini-value ${cls(byStrat.S2||0)}">${fmt(byStrat.S2||0)}</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label" style="color:var(--s0)">S0 PAT</div>
+        <div class="mini-value ${cls(byStrat.S0||0)}">${fmt(byStrat.S0||0)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Fund Balance</div>
+      ${ideal ? `
+      <div class="balance-row">
+        <span class="balance-label">Ideal Balance</span>
+        <span class="balance-value ${cls(ideal)}">${fmt(ideal)}</span>
+      </div>
+      <div class="balance-row">
+        <span class="balance-label">Actual Balance</span>
+        <span class="balance-value">${fmt(actual)}</span>
+      </div>
+      <div class="balance-row">
+        <span class="balance-label">Gap</span>
+        <span class="balance-value ${cls(gap)}">${fmtN(gap)}</span>
+      </div>
+      ` : '<div style="color:var(--muted);font-size:12px">Fund balance data not available</div>'}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Open by Strategy</div>
+      ${Object.entries(openByStrat).map(([s,d]) => `
+        <div class="balance-row">
+          <span class="balance-label">${pill(s)} ${d.count} positions</span>
+          <span class="balance-value">${fmt(d.value)}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    ${state.trades.length > 0 ? `
+    <div class="card">
+      <div class="card-title">Today's Activity</div>
+      ${state.trades.slice(0,3).map(t => `
+        <div class="trade-row">
+          <span class="trade-side ${(t['Buy/Sell']||'').toLowerCase()}">${t['Buy/Sell']||''}</span>
+          <div style="flex:1">
+            <div class="trade-sym">${t['Symbol']||''}</div>
+            <div class="trade-meta">${pill(t['Strategy']||'')} · ${t['Portfolio Status']||''}</div>
+          </div>
+          <div class="trade-val">
+            <div class="trade-pat">${fmt(t['Value'])}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+  `);
+}
+
+// ── Strategy ─────────────────────────────────────────────────────────────────
+function renderStrategy() {
+  const strategies = ['S1','S2','S0'];
+  const fys = [...new Set(state.summary.map(r => r.fy))].sort().reverse();
+
+  let html = '';
+  for (const s of strategies) {
+    const rows = state.summary.filter(r => r.strategy === s);
+    if (rows.length === 0) continue;
+    const total = rows.reduce((a,r) => a + r.pat, 0);
+    const lots  = rows.reduce((a,r) => a + r.lots, 0);
+    const ebit  = rows.reduce((a,r) => a + r.ebit, 0);
+    const tax   = rows.reduce((a,r) => a + r.tax, 0);
+
+    html += `
+    <div class="strat-card ${s.toLowerCase()}">
+      <div class="row">
+        ${pill(s)}
+        <span class="pat ${cls(total)}">${fmt(total)}</span>
+      </div>
+      <div class="details">
+        <div class="d-item"><div class="d-label">Lots</div><div class="d-val">${lots}</div></div>
+        <div class="d-item"><div class="d-label">EBIT</div><div class="d-val ${cls(ebit)}">${fmt(ebit)}</div></div>
+        <div class="d-item"><div class="d-label">Tax</div><div class="d-val neg">${fmt(tax)}</div></div>
+      </div>
+      <div class="divider"></div>
+      ${rows.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+          <span style="color:var(--muted)">${r.fy}</span>
+          <span>${r.lots} lots</span>
+          <span class="${cls(r.pat)} ">${fmt(r.pat)}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  setContent(`<div class="sec-head">Strategy Performance <span class="badge">All FYs</span></div>${html}`);
+}
+
+// ── Open Positions ────────────────────────────────────────────────────────────
+function renderOpen() {
+  const sorted = [...state.open].sort((a,b) => b.value - a.value);
+  const total  = sorted.reduce((a,r) => a + r.value + r.charge, 0);
+
+  setContent(`
+    <div class="sec-head">Open Positions <span class="badge">${sorted.length}</span></div>
+    <div class="card" style="padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between">
+        <div><div style="font-size:10px;color:var(--muted)">Total Deployed</div><div style="font-size:18px;font-weight:700;margin-top:2px">${fmt(total)}</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:var(--muted)">Positions</div><div style="font-size:18px;font-weight:700;margin-top:2px">${sorted.length}</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Scrip</th><th>Qty</th><th>Price</th><th style="text-align:right">Value</th></tr></thead>
+        <tbody>
+          ${sorted.map(r => `
+            <tr>
+              <td><div style="font-weight:600">${r.scrip}</div><div style="font-size:10px;margin-top:1px">${pill(r.strategy)} <span style="color:var(--muted)">${r.date||''}</span></div></td>
+              <td>${r.qty}</td>
+              <td>₹${parseFloat(r.price).toLocaleString('en-IN',{maximumFractionDigits:1})}</td>
+              <td style="text-align:right;font-weight:600">${fmt(r.value)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+// ── Progress S1 ───────────────────────────────────────────────────────────────
+function renderProgress() {
+  const rows = state.progress1;
+  const totalLots = rows.length;
+  const booked = rows.filter(r => {
+    const keys = Object.keys(r);
+    return keys.slice(3,13).some(k => String(r[k]||'').toLowerCase() === 'booked');
+  }).length;
+
+  const cols = rows.length > 0 ? Object.keys(rows[0]).slice(3, 13) : [];
+
+  setContent(`
+    <div class="sec-head">Progress S1 <span class="badge">${totalLots} lots</span></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><span class="pos" style="font-size:20px;font-weight:700">${booked}</span><span style="color:var(--muted);font-size:12px"> / ${totalLots} lots booked</span></div>
+        <div style="font-size:12px;color:var(--muted)">${Math.round(booked/totalLots*100)}%</div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${Math.round(booked/totalLots*100)}%"></div></div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Month</th>
+            <th>Inv</th>
+            ${cols.map((_,i) => `<th>${i+1}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const keys = Object.keys(r);
+            const num   = r[keys[0]];
+            const month = r[keys[1]];
+            const inv   = r[keys[2]];
+            const slots = keys.slice(3,13).map(k => r[k]);
+            return `<tr>
+              <td style="color:var(--muted)">${num}</td>
+              <td style="font-weight:600">${month||''}</td>
+              <td>${fmt(inv)}</td>
+              ${slots.map(v => {
+                const val = String(v||'');
+                const isBooked = val.toLowerCase() === 'booked';
+                const color = isBooked ? 'var(--positive)' : val ? 'var(--muted)' : '';
+                return `<td style="font-size:10px;color:${color};white-space:nowrap">${isBooked ? '✓' : val}</td>`;
+              }).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+// ── Today's Trades ────────────────────────────────────────────────────────────
+function renderTrades() {
+  if (state.trades.length === 0) {
+    setContent(`
+      <div class="sec-head">Today's Trades</div>
+      <div class="card" style="text-align:center;padding:32px;color:var(--muted)">
+        <div style="font-size:32px;margin-bottom:8px">📭</div>
+        <div>No trades today</div>
+      </div>
+    `);
+    return;
+  }
+
+  const totalBuys  = state.trades.filter(t => t['Buy/Sell'] === 'BUY').length;
+  const totalSells = state.trades.filter(t => t['Buy/Sell'] === 'SELL').length;
+
+  setContent(`
+    <div class="sec-head">Today's Trades <span class="badge">${state.trades.length}</span></div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="mini-card"><div class="mini-label pos">Buys</div><div class="mini-value pos">${totalBuys}</div></div>
+      <div class="mini-card"><div class="mini-label neg">Sells</div><div class="mini-value neg">${totalSells}</div></div>
+    </div>
+    <div class="card">
+      ${state.trades.map(t => `
+        <div class="trade-row">
+          <span class="trade-side ${(t['Buy/Sell']||'').toLowerCase()}">${t['Buy/Sell']||''}</span>
+          <div style="flex:1">
+            <div class="trade-sym">${t['Symbol']||''}</div>
+            <div class="trade-meta">${pill(t['Strategy']||'')} · ${t['Portfolio Status']||''}</div>
+          </div>
+          <div class="trade-val">
+            <div class="trade-pat">${fmt(t['Value'])}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:1px">qty ${t['Qty']||''} @ ₹${t['Price']||''}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `);
+}
+
+// ── Closed Trades ─────────────────────────────────────────────────────────────
+function renderClosed() {
+  const fys = [...new Set(state.closed.map(r => r.fy))].filter(Boolean).sort().reverse();
+  const currentFY = fys[0] || 'FY2026-27';
+  const rows = state.closed.filter(r => r.fy === currentFY).sort((a,b) => {
+    return new Date(b.sellDate) - new Date(a.sellDate);
+  });
+
+  const totalPAT = rows.reduce((a,r) => a + r.pat, 0);
+  const wins  = rows.filter(r => r.pat > 0).length;
+  const loss  = rows.filter(r => r.pat < 0).length;
+
+  setContent(`
+    <div class="sec-head">Closed Trades <span class="badge">${currentFY}</span></div>
+    <div class="grid-3">
+      <div class="mini-card"><div class="mini-label">PAT</div><div class="mini-value ${cls(totalPAT)}">${fmt(totalPAT)}</div></div>
+      <div class="mini-card"><div class="mini-label pos">Wins</div><div class="mini-value pos">${wins}</div></div>
+      <div class="mini-card"><div class="mini-label neg">Loss</div><div class="mini-value neg">${loss}</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Scrip</th><th>Sell Date</th><th style="text-align:right">PAT</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td><div style="font-weight:600">${r.scrip}</div><div style="font-size:10px;margin-top:1px">${pill(r.strategy)} ${r.qty} shares</div></td>
+              <td style="font-size:11px;color:var(--muted)">${r.sellDate||''}</td>
+              <td style="text-align:right;font-weight:600" class="${cls(r.pat)}">${fmt(r.pat)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      ${fys.map(fy => `
+        <button onclick="filterClosed('${fy}')" style="padding:6px 12px;background:${fy===currentFY?'var(--accent)':'var(--surface2)'};border:1px solid var(--border);border-radius:8px;color:white;font-size:11px;cursor:pointer">${fy}</button>
+      `).join('')}
+    </div>
+  `);
+}
+
+function filterClosed(fy) {
+  const rows = state.closed.filter(r => r.fy === fy);
+  const totalPAT = rows.reduce((a,r) => a + r.pat, 0);
+  const wins  = rows.filter(r => r.pat > 0).length;
+  const loss  = rows.filter(r => r.pat < 0).length;
+  const fys = [...new Set(state.closed.map(r => r.fy))].filter(Boolean).sort().reverse();
+
+  const tableDiv = document.querySelector('#content .card:last-of-type');
+
+  setContent(`
+    <div class="sec-head">Closed Trades <span class="badge">${fy}</span></div>
+    <div class="grid-3">
+      <div class="mini-card"><div class="mini-label">PAT</div><div class="mini-value ${cls(totalPAT)}">${fmt(totalPAT)}</div></div>
+      <div class="mini-card"><div class="mini-label pos">Wins</div><div class="mini-value pos">${wins}</div></div>
+      <div class="mini-card"><div class="mini-label neg">Loss</div><div class="mini-value neg">${loss}</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Scrip</th><th>Sell Date</th><th style="text-align:right">PAT</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td><div style="font-weight:600">${r.scrip}</div><div style="font-size:10px;margin-top:1px">${pill(r.strategy)} ${r.qty} shares</div></td>
+              <td style="font-size:11px;color:var(--muted)">${r.sellDate||''}</td>
+              <td style="text-align:right;font-weight:600" class="${cls(r.pat)}">${fmt(r.pat)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      ${fys.map(f => `
+        <button onclick="filterClosed('${f}')" style="padding:6px 12px;background:${f===fy?'var(--accent)':'var(--surface2)'};border:1px solid var(--border);border-radius:8px;color:white;font-size:11px;cursor:pointer">${f}</button>
+      `).join('')}
+    </div>
+  `);
+}
+
+// ── Sheet ID config ───────────────────────────────────────────────────────────
+function saveSheetId() {
+  const val = document.getElementById('sid-input').value.trim();
+  if (!val) return;
+  SHEET_ID = val;
+  localStorage.setItem('vtp_sheet_id', val);
+  document.getElementById('config').classList.remove('open');
+  loadData();
+}
+
+// ── Utility ──────────────────────────────────────────────────────────────────
+function setContent(html) {
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
